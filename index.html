@@ -423,7 +423,7 @@
         <header>
             <div class="container">
                 <div class="logo-container">
-                    <img src="chato.jpeg" alt="Logo de Chato" class="logo">
+                <img src="https://res.cloudinary.com/dknm8qct5/image/upload/v1753064874/chato_mq1ji7.jpg" alt="Logo de Chato" class="logo">
                 </div>
                 <h1>Optimiza tus Ventas y Soporte con Chato Bogotá</h1>
                 <p>Necesitamos conocer tu negocio para que Chato pueda entender a tus clientes, responder sus preguntas y guiarlos a tus productos o servicios de forma efectiva.</p>
@@ -594,7 +594,7 @@
         let generatedToken = ''; 
 
         // --- URL de tu Webhook de n8n ---
-        const N8N_WEBHOOK_URL = 'TU_URL_DE_WEBHOOK_DE_N8N_AQUI'; // ¡CAMBIA ESTO!
+         const N8N_WEBHOOK_URL = 'https://inmunoexito-n8n.ucnwvo.easypanel.host/prueba-de-webhook/cac22e09-0c9f-4947-b221-498daeff820e'; 
         // --- --- --- --- --- --- --- ---
 
         // Función para generar un UUID v4 (token simple)
@@ -670,10 +670,10 @@
                 data.preguntas_frecuentes_texto_plano.split('\n').forEach(line => {
                     const parts = line.split('::');
                     if (parts.length >= 2) {
-                        summary += `   - P: ${parts[0].trim()}\n`;
-                        summary += `     R: ${parts.slice(1).join('::').trim()}\n`;
+                        summary += `    - P: ${parts[0].trim()}\n`;
+                        summary += `      R: ${parts.slice(1).join('::').trim()}\n`;
                     } else if (line.trim() !== '') {
-                        summary += `   - (Formato incorrecto o solo texto): ${line.trim()}\n`;
+                        summary += `    - (Formato incorrecto o solo texto): ${line.trim()}\n`;
                     }
                 });
                 summary += `\n`;
@@ -748,19 +748,19 @@
                 if (response.ok) {
                     // Si n8n responde 200 OK
                     previewFullPageSection.style.display = 'none'; // Oculta la previsualización
-                    mainContent.style.display = 'block'; // Asegura que main-content esté visible para que thank-you-message se muestre
-                    form.style.display = 'none'; // Oculta el formulario principal
+                    mainContent.style.display = 'block'; // Asegura que main-content esté visible para que thank-you-message se
                     thankYouMessage.style.display = 'block'; // Muestra el mensaje de agradecimiento
-                    window.scrollTo(0, document.body.scrollHeight); // Lleva al usuario al final de la página para ver el mensaje
+                    form.reset(); // Opcional: limpia el formulario
+                    window.scrollTo(0, document.body.scrollHeight); // Se desplaza al final para ver el mensaje
                 } else {
-                    // Si hay un error en el webhook (ej. 4xx, 5xx)
-                    console.error('Error al enviar los datos a n8n:', response.status, response.statusText);
-                    alert('Hubo un problema al enviar tu información. Por favor, intenta de nuevo más tarde.');
+                    // Si hay un error en la respuesta del webhook
+                    console.error('Error al enviar los datos:', response.status, response.statusText);
+                    alert('Hubo un error al enviar tu información. Por favor, inténtalo de nuevo más tarde.');
                 }
             } catch (error) {
-                // Si hay un error de red
-                console.error('Error de red al enviar formulario:', error);
-                alert('No se pudo conectar con el servidor. Verifica tu conexión e intenta de nuevo.');
+                // Si hay un error de red o de conexión
+                console.error('Error en la solicitud Fetch:', error);
+                alert('No se pudo conectar con el servidor. Verifica tu conexión a internet o inténtalo más tarde.');
             }
         });
     </script>
