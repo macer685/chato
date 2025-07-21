@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -560,7 +561,7 @@
                 <p><a href="#" style="color: var(--chato-light-gray); text-decoration: none;">Política de Privacidad</a></p>
             </div>
         </footer>
-    </div> 
+    </div>    
 
     <section id="preview-full-page-section">
         <div class="container">
@@ -591,10 +592,10 @@
         const tokenCopyButton = document.getElementById('token-copy-button'); // Nuevo
 
         // Variable global para almacenar el token
-        let generatedToken = ''; 
+        let generatedToken = '';    
 
         // --- URL de tu Webhook de n8n ---
-         const N8N_WEBHOOK_URL = "https://immunoexito-n8n.ucnwvo.easypanel.host/webhook/chatogtrf"; 
+        const N8N_WEBHOOK_URL = "https://immunoexito-n8n.ucnwvo.easypanel.host/webhook/chatogtrf";    
         // --- --- --- --- --- --- --- ---
 
         // Función para generar un UUID v4 (token simple)
@@ -605,12 +606,16 @@
             });
         }
 
+        // NUEVA FUNCIÓN: Codificar a Base64
+        function encodeBase64(str) {
+            return btoa(unescape(encodeURIComponent(str)));
+        }
+
         // Función para recolectar datos del formulario y generar el JSON
         function generateCommerceJson() {
             const faqsRaw = document.getElementById('preguntas_frecuentes').value.trim();
             let faqsParsed = [];
-            // Almacenar el texto original de las FAQ para la previsualización si no se puede parsear
-            let faqsPlainText = faqsRaw; 
+            let faqsPlainText = faqsRaw; // Almacenar el texto original de las FAQ para la previsualización
 
             if (faqsRaw) {
                 faqsRaw.split('\n').forEach(line => {
@@ -621,8 +626,6 @@
                             respuesta: parts.slice(1).join('::').trim()
                         });
                     }
-                    // Si la línea no tiene el formato, simplemente se ignora para el JSON estructurado,
-                    // pero se mantendrá en el texto plano.
                 });
             }
 
@@ -637,11 +640,11 @@
                 publico_objetivo: document.getElementById('publico_objetivo').value.trim(),
                 categorias_productos_servicios: document.getElementById('categorias_productos').value.split(',').map(s => s.trim()).filter(s => s),
                 preguntas_frecuentes: faqsParsed, // Enviamos el array parseado al webhook
-                // Añadimos el texto original de las FAQs también por si el webhook lo necesita para RAG directo
-                preguntas_frecuentes_texto_plano: faqsPlainText, 
+                // CAMBIO CLAVE AQUÍ: Codificamos el texto plano de las FAQ a Base64
+                preguntas_frecuentes_base64: encodeBase64(faqsPlainText), 
                 tono_voz_chato: document.getElementById('tono_voz').value,
                 fecha_envio: new Date().toISOString(),
-                token_acceso_chato: generatedToken 
+                token_acceso_chato: generatedToken    
             };
             return data;
         }
@@ -663,11 +666,11 @@
                 summary += `**Categorías de Productos/Servicios:** No proporcionadas\n\n`;
             }
 
-            // Aquí es donde se cambia la lógica para las FAQ
-            if (data.preguntas_frecuentes_texto_plano) { // Si hay texto original en el textarea
+            // Aquí seguimos usando el texto plano original para la previsualización legible
+            const faqsForPreview = document.getElementById('preguntas_frecuentes').value.trim();
+            if (faqsForPreview) { 
                 summary += `**Preguntas Frecuentes (FAQ):**\n`;
-                // Intenta mostrar en formato P: / R:, si no puede, muestra la línea tal cual
-                data.preguntas_frecuentes_texto_plano.split('\n').forEach(line => {
+                faqsForPreview.split('\n').forEach(line => {
                     const parts = line.split('::');
                     if (parts.length >= 2) {
                         summary += `    - P: ${parts[0].trim()}\n`;
@@ -683,6 +686,7 @@
             
             summary += `**Tono de Voz de Chato:** ${document.getElementById('tono_voz').options[document.getElementById('tono_voz').selectedIndex].text || 'No especificado'}\n`;
             summary += `**Fecha de Envío:** ${new Date(data.fecha_envio).toLocaleString('es-CO')}\n`; // Formato legible en español de Colombia
+            summary += `**Token de Acceso Chato:** ${data.token_acceso_chato}\n`; // También mostrar el token en la previsualización
 
             return summary;
         }
@@ -718,7 +722,7 @@
             previewFullPageSection.style.display = 'none'; // Oculta la previsualización
             mainContent.style.display = 'block'; // Muestra la landing
             // Resetear el token si se vuelve a editar el formulario
-            generatedToken = ''; 
+            generatedToken = '';    
             tokenValueElement.textContent = '';
         });
 
@@ -748,19 +752,18 @@
                 if (response.ok) {
                     // Si n8n responde 200 OK
                     previewFullPageSection.style.display = 'none'; // Oculta la previsualización
-                    mainContent.style.display = 'block'; // Asegura que main-content esté visible para que thank-you-message se
                     thankYouMessage.style.display = 'block'; // Muestra el mensaje de agradecimiento
-                    form.reset(); // Opcional: limpia el formulario
-                    window.scrollTo(0, document.body.scrollHeight); // Se desplaza al final para ver el mensaje
+                    mainContent.style.display = 'block'; // Asegura que el contenido principal (donde está el agradecimiento) sea visible
+                    form.reset(); // Resetea el formulario después de un envío exitoso
+                    window.scrollTo(0, document.body.scrollHeight); // Lleva al usuario al final de la página para ver el agradecimiento
                 } else {
-                    // Si hay un error en la respuesta del webhook
-                    console.error('Error al enviar los datos:', response.status, response.statusText);
-                    alert('Hubo un error al enviar tu información. Por favor, inténtalo de nuevo más tarde.');
+                    const errorText = await response.text();
+                    console.error('Error al enviar datos al webhook de n8n:', response.status, errorText);
+                    alert('Hubo un error al enviar tu información. Por favor, intenta de nuevo. Si el problema persiste, contáctanos.');
                 }
             } catch (error) {
-                // Si hay un error de red o de conexión
-                console.error('Error en la solicitud Fetch:', error);
-                alert('No se pudo conectar con el servidor. Verifica tu conexión a internet o inténtalo más tarde.');
+                console.error('Error de red o al enviar la solicitud:', error);
+                alert('No se pudo conectar con el servidor. Revisa tu conexión a internet o intenta más tarde.');
             }
         });
     </script>
